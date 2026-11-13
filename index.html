@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2874f0">
+<title>Ronak Auto Parts</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Ccircle cx='32' cy='32' r='25' fill='none' stroke='%23fff' stroke-width='6' stroke-dasharray='6.54 6.54'/%3E%3Ccircle cx='32' cy='32' r='19' fill='%23fff'/%3E%3Ctext x='32' y='37.5' text-anchor='middle' font-family='Arial' font-weight='900' font-size='15' fill='%231d4ed8'%3ERAP%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { rb: { DEFAULT:'#2874f0', dark:'#1a56c4', deep:'#0f3d91' }, fk:{ yellow:'#ffe11b', orange:'#fb641b' } } } } }
+</script>
+<style>
+  html,body{background:#f1f3f6;-webkit-tap-highlight-color:transparent}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#212121}
+  .no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
+  .chip{white-space:nowrap}
+  .toast{animation:tin .25s ease-out}
+  @keyframes tin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .pop{animation:pop .3s ease}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+  /* Order slip (shared by modal, print and download) */
+  .slip{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:22px;max-width:640px;margin:0 auto;font-size:13px}
+  .slip .hd{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #2874f0;padding-bottom:12px;gap:10px}
+  .slip .brand{display:flex;align-items:center;gap:10px}
+  .slip .brand h1{margin:0;font-size:20px;color:#1a56c4;line-height:1.1}
+  .slip .brand p{margin:2px 0 0;font-size:11px;color:#555}
+  .slip .tag{background:#2874f0;color:#fff;font-weight:700;letter-spacing:1px;padding:5px 10px;border-radius:4px;font-size:12px}
+  .slip .meta{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;margin:14px 0}
+  .slip .meta div{min-width:180px;flex:1}
+  .slip .meta b{display:block;font-size:11px;text-transform:uppercase;color:#777;letter-spacing:.5px;margin-bottom:2px}
+  .slip table{width:100%;border-collapse:collapse;margin-top:6px}
+  .slip th{background:#eef4ff;color:#1a56c4;text-align:left;padding:8px;font-size:12px;border-bottom:2px solid #2874f0}
+  .slip td{padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+  .slip .r{text-align:right}.slip .c{text-align:center}
+  .slip .total{display:flex;justify-content:space-between;align-items:center;background:#eef4ff;border:1px solid #2874f0;border-radius:6px;padding:10px 12px;margin-top:12px;font-size:16px;font-weight:700;color:#0f3d91}
+  .slip .ft{text-align:center;color:#666;font-size:11px;margin-top:16px;border-top:1px dashed #bbb;padding-top:10px}
+  #printArea{display:none}
+  @media print{
+    body{background:#fff!important}
+    body>*:not(#printArea){display:none!important}
+    #printArea{display:block!important}
+    .slip{padding:0;max-width:none}
+    @page{margin:12mm}
+  }
+</style>
+</head>
+<body class="min-h-screen pb-24">
+
+<!-- Reusable logo symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="rapLogo" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="14" fill="#fff"/>
+      <circle cx="32" cy="32" r="25" fill="none" stroke="#2874f0" stroke-width="6" stroke-dasharray="6.54 6.54"/>
+      <circle cx="32" cy="32" r="19.5" fill="#1a56c4"/>
+      <text x="32" y="36" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14.5" fill="#fff">RAP</text>
+      <rect x="20" y="41" width="24" height="3" rx="1.5" fill="#ffe11b"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-30 bg-rb shadow-md">
+  <div class="max-w-6xl mx-auto px-3 pt-3 pb-2">
+    <div class="flex items-center gap-3">
+      <a href="#" class="flex items-center gap-2 shrink-0" id="logoLink" aria-label="Ronak Auto Parts home">
+        <svg class="w-10 h-10 rounded-xl shadow" viewBox="0 0 64 64"><use href="#rapLogo"/></svg>
+        <div class="leading-tight">
+          <div class="text-white font-extrabold text-[17px] italic tracking-tight">Ronak Auto Parts</div>
+          <div class="text-[10px] text-fk-yellow font-semibold">Genuine ✦ Reliable ✦ Affordable</div>
+        </div>
+      </a>
+      <div class="hidden md:block flex-1 mx-4">
+        <div class="relative">
+          <input id="searchDesk" type="search" placeholder="Search for auto parts, brands and more" class="w-full rounded-sm px-4 py-2.5 text-sm outline-none shadow-inner">
+        </div>
+      </div>
+      <div class="ml-auto flex items-center gap-1">
+        <button id="adminBtnTop" class="hidden sm:flex items-center gap-1 text-white text-sm font-semibold px-3 py-2 rounded hover:bg-rb-dark">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Admin
+        </button>
+        <button id="cartBtn" class="relative flex items-center gap-2 text-white font-semibold px-3 py-2 rounded hover:bg-rb-dark" aria-label="Open cart">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          <span class="hidden sm:inline text-sm">Cart</span>
+          <span id="cartBadge" class="absolute -top-0.5 left-6 bg-fk-orange text-white text-[11px] font-bold min-w-[19px] h-[19px] px-1 rounded-full flex items-center justify-center border-2 border-rb">0</span>
+        </button>
+      </div>
+    </div>
+    <div class="md:hidden mt-2.5">
+      <input id="searchMob" type="search" placeholder="Search for auto parts, brands and more" class="w-full rounded-sm px-3.5 py-2.5 text-sm outline-none shadow-inner">
+    </div>
+  </div>
+  <div class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar" id="cats"></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="max-w-6xl mx-auto px-3 mt-3">
+  <div class="rounded-lg bg-gradient-to-r from-rb-deep via-rb to-sky-400 text-white p-4 sm:p-6 flex items-center justify-between overflow-hidden relative">
+    <div class="z-10">
+      <p class="text-xs sm:text-sm font-semibold text-fk-yellow uppercase tracking-wider">Ronak Auto Parts</p>
+      <h2 class="text-xl sm:text-3xl font-extrabold leading-tight mt-1">Genuine spares.<br>Doorstep delivery.</h2>
+      <p class="text-xs sm:text-sm mt-1.5 opacity-90">Strut Mounts • Strut Kits • Bush Kits • Coil Pads • Rod &amp; Rear Bushes</p>
+    </div>
+    <svg class="w-24 h-24 sm:w-36 sm:h-36 opacity-90 shrink-0" viewBox="0 0 64 64"><use href="#rapLogo"/></svg>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<main class="max-w-6xl mx-auto px-3 mt-4">
+  <div class="flex items-baseline justify-between mb-2">
+    <h3 id="listTitle" class="font-bold text-base sm:text-lg">All Products</h3>
+    <span id="listCount" class="text-xs text-gray-500"></span>
+  </div>
+  <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3"></div>
+  <div id="empty" class="hidden text-center py-16 text-gray-500">
+    <div class="text-5xl mb-2">🔍</div>
+    <p class="font-semibold">No products found</p>
+    <p class="text-sm">Try a different search or category.</p>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="max-w-6xl mx-auto px-3 mt-8">
+  <div class="bg-rb-deep text-white rounded-lg p-4 text-sm flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="w-9 h-9 rounded-lg" viewBox="0 0 64 64"><use href="#rapLogo"/></svg>
+      <div><div class="font-bold">Ronak Auto Parts</div><div class="text-xs opacity-80">Quality spares for every ride</div></div>
+    </div>
+    <button id="adminBtnFoot" class="self-start sm:self-auto bg-white/15 hover:bg-white/25 px-4 py-2 rounded font-semibold text-sm flex items-center gap-2">🔐 Admin Login</button>
+  </div>
+  <p class="text-center text-xs text-gray-500 mt-3">© <span id="yr"></span> Ronak Auto Parts. All rights reserved.</p>
+</footer>
+
+<!-- Sticky mobile cart bar -->
+<div id="cartBar" class="hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t shadow-[0_-4px_12px_rgba(0,0,0,.12)] px-3 py-2.5 flex items-center justify-between gap-3">
+  <div><div class="text-xs text-gray-500"><span id="barCount">0</span> item(s) in cart</div><div id="barTotal" class="font-bold text-lg leading-tight">₹0</div></div>
+  <button id="barBtn" class="bg-fk-orange text-white font-bold px-6 py-3 rounded-sm text-sm shadow">VIEW CART</button>
+</div>
+
+<!-- CART DRAWER -->
+<div id="cartModal" class="hidden fixed inset-0 z-40 bg-black/50">
+  <div class="absolute bottom-0 left-0 right-0 max-h-[94vh] md:top-0 md:left-auto md:w-[440px] md:max-h-none md:h-full bg-white rounded-t-2xl md:rounded-none flex flex-col">
+    <div class="bg-rb text-white px-4 py-3 flex items-center justify-between rounded-t-2xl md:rounded-none">
+      <h3 class="font-bold">My Cart <span id="cartHeadCount" class="font-normal opacity-90"></span></h3>
+      <button data-act="closeCart" class="text-2xl leading-none px-2" aria-label="Close">×</button>
+    </div>
+    <div class="flex-1 overflow-y-auto bg-slate-50">
+      <div id="cartItems" class="bg-white"></div>
+      <div id="cartEmpty" class="hidden text-center py-14 text-gray-500">
+        <div class="text-5xl mb-2">🛒</div><p class="font-semibold">Your cart is empty</p><p class="text-sm">Add some parts to get started.</p>
+      </div>
+      <form id="checkout" class="bg-white mt-2 p-4 space-y-3" autocomplete="on" novalidate>
+        <h4 class="font-bold text-sm text-gray-700 uppercase tracking-wide">Delivery Details</h4>
+        <div>
+          <label class="text-xs font-semibold text-gray-600" for="cName">Full Name</label>
+          <input id="cName" name="name" type="text" autocomplete="name" placeholder="Enter your name" class="w-full border rounded px-3 py-2.5 text-sm outline-none focus:border-rb mt-1">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600" for="cPhone">Phone Number</label>
+          <input id="cPhone" name="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit mobile number" class="w-full border rounded px-3 py-2.5 text-sm outline-none focus:border-rb mt-1">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600" for="cAddr">Address</label>
+          <textarea id="cAddr" name="address" rows="3" autocomplete="street-address" placeholder="House no, street, area, city, PIN" class="w-full border rounded px-3 py-2.5 text-sm outline-none focus:border-rb mt-1"></textarea>
+        </div>
+        <p id="formErr" class="hidden text-sm text-red-600 font-semibold"></p>
+      </form>
+    </div>
+    <div class="border-t bg-white p-3 flex items-center justify-between gap-3" style="padding-bottom:max(12px,env(safe-area-inset-bottom))">
+      <div><div class="text-xs text-gray-500">Grand Total</div><div id="cartTotal" class="font-extrabold text-xl">₹0</div></div>
+      <button id="placeBtn" type="submit" form="checkout" class="bg-fk-orange text-white font-bold px-7 py-3 rounded-sm text-sm shadow disabled:opacity-50">PLACE ORDER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER SLIP MODAL -->
+<div id="slipModal" class="hidden fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-slate-100 w-full sm:max-w-2xl max-h-[96vh] rounded-t-2xl sm:rounded-xl flex flex-col overflow-hidden">
+    <div class="bg-rb text-white px-4 py-3 flex items-center justify-between">
+      <h3 class="font-bold" id="slipTitle">Order Slip</h3>
+      <button data-act="closeSlip" class="text-2xl leading-none px-2" aria-label="Close">×</button>
+    </div>
+    <div id="slipBody" class="flex-1 overflow-y-auto p-2 sm:p-4"></div>
+    <div class="bg-white border-t p-3 flex flex-wrap gap-2 justify-end">
+      <button data-act="downloadSlip" class="border border-rb text-rb font-semibold px-4 py-2.5 rounded-sm text-sm">⬇ Download</button>
+      <button data-act="printSlip" class="bg-rb text-white font-semibold px-4 py-2.5 rounded-sm text-sm">🖨 Print / Save PDF</button>
+      <button data-act="closeSlip" class="bg-gray-200 font-semibold px-4 py-2.5 rounded-sm text-sm">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div id="pinModal" class="hidden fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+  <form id="pinForm" class="bg-white rounded-xl w-full max-w-xs p-5 shadow-xl">
+    <div class="flex justify-center"><svg class="w-14 h-14 rounded-xl shadow" viewBox="0 0 64 64"><use href="#rapLogo"/></svg></div>
+    <h3 class="text-center font-bold mt-2">Admin Access</h3>
+    <p class="text-center text-xs text-gray-500 mb-3">Enter your admin PIN to continue</p>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="• • • •" class="w-full text-center tracking-[.6em] text-2xl border rounded py-2.5 outline-none focus:border-rb">
+    <p id="pinErr" class="hidden text-center text-sm text-red-600 font-semibold mt-2">Incorrect PIN. Try again.</p>
+    <div class="flex gap-2 mt-4">
+      <button type="button" data-act="closePin" class="flex-1 bg-gray-200 font-semibold py-2.5 rounded-sm text-sm">Cancel</button>
+      <button type="submit" class="flex-1 bg-rb text-white font-semibold py-2.5 rounded-sm text-sm">Unlock</button>
+    </div>
+  </form>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin" class="hidden fixed inset-0 z-50 bg-slate-100 overflow-y-auto">
+  <div class="sticky top-0 z-10 bg-rb-deep text-white shadow">
+    <div class="max-w-5xl mx-auto px-3 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-9 h-9 rounded-lg" viewBox="0 0 64 64"><use href="#rapLogo"/></svg>
+        <div class="leading-tight"><div class="font-bold">Admin Dashboard</div><div class="text-[11px] opacity-80">Ronak Auto Parts</div></div>
+      </div>
+      <button data-act="exitAdmin" class="bg-white/15 hover:bg-white/25 px-3 py-2 rounded text-sm font-semibold">Exit ✕</button>
+    </div>
+    <div class="max-w-5xl mx-auto px-3 flex gap-1 overflow-x-auto no-scrollbar" id="adminTabs"></div>
+  </div>
+  <div class="max-w-5xl mx-auto p-3" id="adminBody"></div>
+</div>
+
+<!-- Print target -->
+<div id="printArea"></div>
+<div id="toasts" class="fixed bottom-20 left-0 right-0 z-[80] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits:2});
+const CATS = ['Strut Mount','Strut Kit','Suspension Bush Kit','Coil Pad','Balance Rod Bush','Rear Bush'];
+const PIN_KEY = 'rap_admin_pin_v1';
+const DEFAULT_PIN = '1234';   // used only until the owner sets a new PIN
+const KEYS = { p:'rap_products_v2', o:'rap_orders_v1', c:'rap_cart_v2' };
+
+/* ====== FIREBASE SETTINGS — paste your own values between the quotes ======
+   databaseURL : your Realtime Database URL, e.g. 'https://ronak-auto-parts-default-rtdb.asia-southeast1.firebasedatabase.app'
+   apiKey      : Web API Key (Project settings > General). Needed for the secure admin sign-in. */
+const FIREBASE = {
+  databaseURL: '',
+  apiKey: ''
+};
+
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ toast('Storage full or blocked — changes may not persist','err'); } }
+};
+
+/* ---------- Generated product artwork (no external images) ---------- */
+function svgArt(cat){
+  const pal = { 'Strut Mount':['#bfdbfe','#2563eb'], 'Strut Kit':['#99f6e4','#0d9488'], 'Suspension Bush Kit':['#fed7aa','#ea580c'], 'Coil Pad':['#e9d5ff','#9333ea'], 'Balance Rod Bush':['#bbf7d0','#16a34a'], 'Rear Bush':['#fecdd3','#e11d48'] }[cat] || ['#e5e7eb','#6b7280'];
+  const icons = {
+    'Strut Mount':`<ellipse cx="100" cy="130" rx="58" ry="16" fill="#334155"/><rect x="48" y="104" width="104" height="26" rx="10" fill="#fff"/><rect x="82" y="62" width="36" height="46" rx="6" fill="#fff"/><rect x="92" y="38" width="16" height="30" fill="#334155"/><circle cx="62" cy="117" r="5" fill="${pal[1]}"/><circle cx="138" cy="117" r="5" fill="${pal[1]}"/>`,
+    'Strut Kit':`<rect x="94" y="28" width="12" height="144" rx="5" fill="#334155"/><path d="M66 60q34 -12 68 0M66 80q34 -12 68 0M66 100q34 -12 68 0M66 120q34 -12 68 0" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="58" y="154" width="84" height="16" rx="5" fill="#fff"/><rect x="72" y="34" width="56" height="10" rx="4" fill="#fff"/>`,
+    'Suspension Bush Kit':`<circle cx="70" cy="74" r="28" fill="#fff"/><circle cx="70" cy="74" r="11" fill="#334155"/><circle cx="136" cy="94" r="24" fill="#fff"/><circle cx="136" cy="94" r="9" fill="#334155"/><circle cx="92" cy="142" r="22" fill="#fff"/><circle cx="92" cy="142" r="8" fill="#334155"/>`,
+    'Coil Pad':`<ellipse cx="100" cy="118" rx="62" ry="22" fill="#334155"/><ellipse cx="100" cy="106" rx="62" ry="22" fill="#fff"/><ellipse cx="100" cy="106" rx="30" ry="10" fill="${pal[1]}"/><path d="M54 98q46 -26 92 0" stroke="${pal[1]}" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>`,
+    'Balance Rod Bush':`<rect x="40" y="92" width="120" height="16" rx="8" fill="#334155"/><circle cx="50" cy="100" r="28" fill="#fff"/><circle cx="50" cy="100" r="11" fill="${pal[1]}"/><circle cx="150" cy="100" r="28" fill="#fff"/><circle cx="150" cy="100" r="11" fill="${pal[1]}"/>`,
+    'Rear Bush':`<ellipse cx="100" cy="136" rx="46" ry="14" fill="#fff"/><rect x="54" y="64" width="92" height="72" fill="#fff"/><ellipse cx="100" cy="64" rx="46" ry="14" fill="#fff" stroke="#334155" stroke-width="5"/><ellipse cx="100" cy="64" rx="15" ry="5" fill="#334155"/><path d="M54 100h92" stroke="${pal[1]}" stroke-width="5"/>`
+  };
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${pal[0]}"/><stop offset="1" stop-color="${pal[1]}"/></linearGradient></defs><rect width="200" height="200" fill="url(#g)"/>${icons[cat]||icons['Rear Bush']}</svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+window.__fallbackImg = function(el){ el.onerror = null; el.src = svgArt(el.dataset.cat); };
+const imgFor = p => (p.image && p.image.trim()) ? p.image.trim() : svgArt(p.category);
+const ratingFor = p => { let h = 0; for (const ch of (p.name||'')) h = (h*31 + ch.charCodeAt(0)) >>> 0; return (3.9 + (h % 10) / 11).toFixed(1); };
+
+/* ---------- Data ---------- */
+const SAMPLE = [
+  { id:'p1', name:'Front Strut Mount with Bearing – Maruti Swift / Dzire (Pair)', category:'Strut Mount', price:1850, image:'' },
+  { id:'p2', name:'Front Strut Repair Kit (Mount, Bearing, Dust Boot & Bump Stop) – Hyundai i20', category:'Strut Kit', price:2450, image:'' },
+  { id:'p3', name:'Lower Arm Suspension Bush Kit (Full Set) – Honda City', category:'Suspension Bush Kit', price:1650, image:'' },
+  { id:'p4', name:'Front Coil Spring Rubber Pad – Toyota Innova (Pair)', category:'Coil Pad', price:520, image:'' },
+  { id:'p5', name:'Stabilizer / Balance Rod Bush Kit – Tata Nexon', category:'Balance Rod Bush', price:420, image:'' },
+  { id:'p6', name:'Rear Trailing Arm Bush – Mahindra Scorpio (Pair)', category:'Rear Bush', price:950, image:'' }
+];
+let products = store.get(KEYS.p, null);
+if (!Array.isArray(products) || !products.length && localStorage.getItem(KEYS.p) === null) { products = SAMPLE.slice(); store.set(KEYS.p, products); }
+if (Array.isArray(products)) { const ok = products.filter(p => CATS.includes(p.category)); if (ok.length !== products.length) { products = ok; store.set(KEYS.p, products); } }
+let orders = store.get(KEYS.o, []);
+let cart = store.get(KEYS.c, {});       // { productId: qty }
+let state = { cat:'All', q:'', tab:'products', editId:null, lastOrder:null, isAdmin:false, draftImage:'' };
+
+const saveProducts = () => store.set(KEYS.p, products);
+const saveOrders = () => store.set(KEYS.o, orders);
+const saveCart = () => store.set(KEYS.c, cart);
+const prod = id => products.find(p => p.id === id);
+function cleanCart(){ let ch = false; for (const id of Object.keys(cart)) { if (!prod(id) || !(cart[id] > 0)) { delete cart[id]; ch = true; } } if (ch) saveCart(); }
+
+/* ---------- Toast ---------- */
+function toast(msg, type){
+  const t = document.createElement('div');
+  t.className = 'toast pointer-events-auto text-white text-sm font-semibold px-4 py-2.5 rounded shadow-lg ' + (type==='err' ? 'bg-red-600' : 'bg-gray-900');
+  t.textContent = msg; $('#toasts').appendChild(t);
+  setTimeout(() => { t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2000);
+}
+
+/* ---------- Firebase Realtime Database (REST — no SDK needed) ---------- */
+const CLOUD_URL = (FIREBASE.databaseURL || '').trim().replace(/\/+$/, '');
+const CLOUD_ON = /^https:\/\//.test(CLOUD_URL);
+const AUTH_KEY = 'rap_cloud_auth_v1';
+let idToken = '', idExp = 0, lastCloudSig = '';
+const savedAuth = () => store.get(AUTH_KEY, null);
+
+async function cloudSignIn(email, password){
+  const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + encodeURIComponent(FIREBASE.apiKey), {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password, returnSecureToken:true })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error((d.error && d.error.message) ? d.error.message.replace(/_/g,' ').toLowerCase() : 'Sign-in failed');
+  idToken = d.idToken; idExp = Date.now() + (+d.expiresIn || 3600) * 1000;
+  store.set(AUTH_KEY, { email, refreshToken:d.refreshToken });
+}
+async function cloudToken(){
+  if (!FIREBASE.apiKey) return '';
+  if (idToken && Date.now() < idExp - 60000) return idToken;
+  const a = savedAuth();
+  if (!a || !a.refreshToken) throw new Error('Please sign in under Admin → Cloud Sync');
+  const r = await fetch('https://securetoken.googleapis.com/v1/token?key=' + encodeURIComponent(FIREBASE.apiKey), {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'grant_type=refresh_token&refresh_token=' + encodeURIComponent(a.refreshToken)
+  });
+  const d = await r.json();
+  if (!r.ok) { store.set(AUTH_KEY, null); throw new Error('Session expired — sign in again under Cloud Sync'); }
+  idToken = d.id_token; idExp = Date.now() + (+d.expires_in || 3600) * 1000;
+  store.set(AUTH_KEY, { email:a.email, refreshToken:d.refresh_token });
+  return idToken;
+}
+async function cloudWrite(path, method, body){
+  if (!CLOUD_ON) return;
+  const tok = await cloudToken();
+  const r = await fetch(CLOUD_URL + '/' + path + '.json' + (tok ? '?auth=' + encodeURIComponent(tok) : ''), {
+    method, headers:{'Content-Type':'application/json'}, body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(r.status === 401 ? 'Permission denied — check Firebase rules & admin sign-in' : 'Cloud error ' + r.status);
+}
+const cloudItem = p => ({ name:p.name, category:p.category, price:p.price, image:p.image || '', ts:p.ts || Date.now() });
+async function pushProduct(p){
+  try { await cloudWrite('catalog/products/' + p.id, 'PUT', cloudItem(p)); toast('Live for all customers ✔'); }
+  catch(e){ toast(e.message || 'Cloud sync failed', 'err'); }
+}
+async function removeProduct(id){
+  try { await cloudWrite('catalog/products/' + id, 'DELETE'); toast('Removed for all customers'); }
+  catch(e){ toast(e.message || 'Cloud sync failed', 'err'); }
+}
+async function publishAll(){
+  try {
+    const base = Date.now();
+    products.forEach((p, i) => { if (!p.ts) p.ts = base - i * 1000; });
+    saveProducts();
+    const obj = {}; products.forEach(p => { obj[p.id] = cloudItem(p); });
+    await cloudWrite('catalog', 'PUT', { init:true, products:obj });
+    toast('Catalog published to all customers ✔');
+  } catch(e){ toast(e.message || 'Publish failed', 'err'); }
+}
+async function cloudLoad(force){
+  if (!CLOUD_ON) return;
+  try {
+    const r = await fetch(CLOUD_URL + '/catalog.json', { cache:'no-store' });
+    if (!r.ok) return;
+    const c = await r.json();
+    if (!c) return;                                   // nothing published yet → keep local catalog
+    const list = Object.entries(c.products || {}).map(([id, p]) => Object.assign({}, p, { id })).filter(p => CATS.includes(p.category)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const sig = JSON.stringify(list);
+    if (sig === lastCloudSig && !force) return;
+    lastCloudSig = sig; products = list; saveProducts(); cleanCart();
+    renderProducts(); renderBadge();
+    if (state.isAdmin) { renderAdminTabs(); if (state.tab === 'products') renderCatalogList(); }
+  } catch(e){ /* offline: keep showing last saved catalog */ }
+}
+function cloudStream(){
+  if (!CLOUD_ON) return;
+  let first = true, t;
+  const hit = () => { if (first) { first = false; return; } clearTimeout(t); t = setTimeout(() => cloudLoad(), 400); };
+  if (window.EventSource) {
+    try { const es = new EventSource(CLOUD_URL + '/catalog.json'); es.addEventListener('put', hit); es.addEventListener('patch', hit); } catch(e){}
+  }
+  setInterval(() => cloudLoad(), 120000);              // safety net
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) cloudLoad(); });
+}
+
+/* ---------- Storefront ---------- */
+function renderCats(){
+  $('#cats').innerHTML = ['All', ...CATS].map(c =>
+    `<button data-act="cat" data-cat="${c}" class="chip px-4 py-1.5 rounded-full text-sm font-semibold border ${state.cat===c ? 'bg-rb text-white border-rb' : 'bg-white text-gray-700 border-gray-300 hover:border-rb'}">${c}</button>`).join('');
+}
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return products.filter(p => (state.cat==='All' || p.category===state.cat) && (!q || (p.name + ' ' + p.category).toLowerCase().includes(q)));
+}
+function renderProducts(){
+  const list = filtered();
+  $('#listTitle').textContent = state.cat==='All' ? 'All Products' : state.cat;
+  $('#listCount').textContent = list.length + ' item' + (list.length===1?'':'s');
+  $('#empty').classList.toggle('hidden', list.length > 0);
+  $('#grid').innerHTML = list.map(p => {
+    const inCart = cart[p.id] || 0;
+    return `<div class="bg-white rounded-md shadow-sm hover:shadow-md transition flex flex-col overflow-hidden">
+      <div class="aspect-square bg-gray-100 relative">
+        <img src="${esc(imgFor(p))}" alt="${esc(p.name)}" data-cat="${esc(p.category)}" loading="lazy" onerror="__fallbackImg(this)" class="w-full h-full object-cover">
+        <span class="absolute top-2 left-2 bg-white/90 text-[10px] font-bold text-rb px-2 py-0.5 rounded">${esc(p.category)}</span>
+      </div>
+      <div class="p-2.5 flex flex-col flex-1">
+        <h4 class="text-[13px] font-medium leading-snug line-clamp-2 min-h-[2.4em]">${esc(p.name)}</h4>
+        <div class="flex items-center gap-1.5 mt-1">
+          <span class="bg-green-600 text-white text-[11px] font-bold px-1.5 py-0.5 rounded">${ratingFor(p)} ★</span>
+          <span class="text-[11px] text-gray-500 font-semibold">RAP Genuine</span>
+        </div>
+        <div class="font-extrabold text-base mt-1.5">${money(p.price)}</div>
+        <div class="mt-auto pt-2">
+          <button data-act="add" data-id="${esc(p.id)}" class="w-full bg-fk-orange hover:brightness-95 text-white text-sm font-bold py-2 rounded-sm">${inCart ? 'ADD MORE (' + inCart + ')' : 'ADD TO CART'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+function cartTotal(){ return Object.entries(cart).reduce((s,[id,q]) => s + (prod(id)?.price || 0) * q, 0); }
+function renderBadge(bump){
+  const n = cartCount(), b = $('#cartBadge');
+  b.textContent = n;
+  if (bump) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+  $('#cartBar').classList.toggle('hidden', n === 0 || !$('#cartModal').classList.contains('hidden') || state.isAdmin);
+  $('#barCount').textContent = n; $('#barTotal').textContent = money(cartTotal());
+}
+
+/* ---------- Cart ---------- */
+function renderCart(){
+  cleanCart();
+  const ids = Object.keys(cart);
+  $('#cartHeadCount').textContent = ids.length ? '(' + cartCount() + ' item' + (cartCount()>1?'s':'') + ')' : '';
+  $('#cartEmpty').classList.toggle('hidden', ids.length > 0);
+  $('#cartItems').classList.toggle('hidden', ids.length === 0);
+  $('#checkout').classList.toggle('hidden', ids.length === 0);
+  $('#placeBtn').disabled = ids.length === 0;
+  $('#cartItems').innerHTML = ids.map(id => {
+    const p = prod(id), q = cart[id];
+    return `<div class="flex gap-3 p-3 border-b">
+      <img src="${esc(imgFor(p))}" data-cat="${esc(p.category)}" onerror="__fallbackImg(this)" alt="" class="w-16 h-16 rounded object-cover bg-gray-100 shrink-0">
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium leading-snug">${esc(p.name)}</div>
+        <div class="text-xs text-gray-500">${esc(p.category)}</div>
+        <div class="flex items-center justify-between mt-2">
+          <div class="flex items-center border rounded overflow-hidden">
+            <button data-act="dec" data-id="${esc(id)}" class="w-8 h-8 text-lg font-bold hover:bg-gray-100" aria-label="Decrease">−</button>
+            <span class="w-9 text-center text-sm font-bold">${q}</span>
+            <button data-act="inc" data-id="${esc(id)}" class="w-8 h-8 text-lg font-bold hover:bg-gray-100" aria-label="Increase">+</button>
+          </div>
+          <div class="font-bold">${money(p.price * q)}</div>
+        </div>
+        <button data-act="rm" data-id="${esc(id)}" class="text-xs font-bold text-red-600 mt-1.5">REMOVE</button>
+      </div>
+    </div>`;
+  }).join('');
+  $('#cartTotal').textContent = money(cartTotal());
+}
+function openCart(){ renderCart(); $('#cartModal').classList.remove('hidden'); document.body.style.overflow='hidden'; $('#cartBar').classList.add('hidden'); }
+function closeCart(){ $('#cartModal').classList.add('hidden'); document.body.style.overflow=''; renderBadge(); }
+function addToCart(id){ if (!prod(id)) return; cart[id] = (cart[id]||0) + 1; saveCart(); renderBadge(true); renderProducts(); toast('Added to cart'); }
+function setQty(id, d){ cart[id] = (cart[id]||0) + d; if (cart[id] <= 0) delete cart[id]; saveCart(); renderCart(); renderBadge(); renderProducts(); }
+
+function genOrderId(){
+  const d = new Date(), pad = n => String(n).padStart(2,'0');
+  let id; do { id = 'RAP-' + String(d.getFullYear()).slice(2) + pad(d.getMonth()+1) + pad(d.getDate()) + '-' + Math.floor(1000 + Math.random()*9000); } while (orders.some(o => o.id === id));
+  return id;
+}
+function placeOrder(e){
+  e.preventDefault();
+  const name = $('#cName').value.trim(), phone = $('#cPhone').value.trim(), address = $('#cAddr').value.trim();
+  const err = $('#formErr'); let m = '';
+  if (!Object.keys(cart).length) m = 'Your cart is empty.';
+  else if (name.length < 2) m = 'Please enter your name.';
+  else if (!/^[6-9]\d{9}$/.test(phone)) m = 'Enter a valid 10-digit mobile number.';
+  else if (address.length < 8) m = 'Please enter your full delivery address.';
+  if (m) { err.textContent = m; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  const items = Object.entries(cart).map(([id,q]) => { const p = prod(id); return { id, name:p.name, category:p.category, price:p.price, qty:q }; });
+  const order = { id:genOrderId(), createdAt:Date.now(), customer:{ name, phone, address }, items, total:items.reduce((s,i)=>s+i.price*i.qty,0), status:'pending' };
+  orders.unshift(order); saveOrders();
+  cart = {}; saveCart(); $('#checkout').reset();
+  closeCart(); renderProducts(); renderBadge();
+  showSlip(order, 'Order Placed Successfully ✔');
+}
+
+/* ---------- Order slip ---------- */
+function slipHTML(o){
+  const dt = new Date(o.createdAt).toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' });
+  const rows = o.items.map((i,n) => `<tr><td>${n+1}</td><td>${esc(i.name)}<br><small style="color:#777">${esc(i.category)}</small></td><td class="c">${i.qty}</td><td class="r">${money(i.price)}</td><td class="r">${money(i.price*i.qty)}</td></tr>`).join('');
+  return `<div class="slip">
+    <div class="hd">
+      <div class="brand">
+        <svg width="46" height="46" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2874f0"/><circle cx="32" cy="32" r="25" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="6.54 6.54"/><circle cx="32" cy="32" r="19.5" fill="#fff"/><text x="32" y="36" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14.5" fill="#1a56c4">RAP</text><rect x="20" y="41" width="24" height="3" rx="1.5" fill="#fb641b"/></svg>
+        <div><h1>Ronak Auto Parts</h1><p>Genuine • Reliable • Affordable</p></div>
+      </div>
+      <div class="tag">ORDER SLIP</div>
+    </div>
+    <div class="meta">
+      <div><b>Order ID</b>${esc(o.id)}</div>
+      <div><b>Date &amp; Time</b>${esc(dt)}</div>
+      <div><b>Status</b>${esc(o.status.charAt(0).toUpperCase()+o.status.slice(1))}</div>
+    </div>
+    <div class="meta" style="margin-top:0">
+      <div><b>Customer</b>${esc(o.customer.name)}<br>📞 ${esc(o.customer.phone)}</div>
+      <div><b>Delivery Address</b>${esc(o.customer.address).replace(/\n/g,'<br>')}</div>
+    </div>
+    <table><thead><tr><th>#</th><th>Item</th><th class="c">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total"><span>Grand Total</span><span>${money(o.total)}</span></div>
+    <div class="ft">Payment: Pay on delivery / as agreed with the shop.<br>Thank you for shopping with <b>Ronak Auto Parts</b>! Please keep this slip for your records.</div>
+  </div>`;
+}
+function showSlip(o, title){
+  state.lastOrder = o;
+  $('#slipTitle').textContent = title || ('Order ' + o.id);
+  $('#slipBody').innerHTML = slipHTML(o);
+  $('#slipModal').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+}
+function closeSlip(){ $('#slipModal').classList.add('hidden'); document.body.style.overflow = state.isAdmin ? 'hidden' : ''; }
+function printSlip(){
+  if (!state.lastOrder) return;
+  $('#printArea').innerHTML = slipHTML(state.lastOrder);
+  setTimeout(() => window.print(), 50);
+}
+function downloadSlip(){
+  const o = state.lastOrder; if (!o) return;
+  const css = Array.from(document.styleSheets).flatMap(s => { try { return Array.from(s.cssRules); } catch(e){ return []; } }).filter(r => r.selectorText && r.selectorText.includes('.slip')).map(r => r.cssText).join('\n');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(o.id)} – Ronak Auto Parts</title><style>body{background:#f1f3f6;margin:0;padding:12px}${css}@media print{body{background:#fff;padding:0}}</style></head><body>${slipHTML(o)}</body></html>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type:'text/html' }));
+  a.download = o.id + '-OrderSlip.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+
+/* ---------- Admin PIN (stored hashed in localStorage) ---------- */
+async function hashPin(pin, scheme){
+  if (scheme === 's' && window.crypto && crypto.subtle) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rap-admin:' + pin));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return 'p:' + pin;
+}
+async function verifyPin(pin){
+  const rec = store.get(PIN_KEY, null);
+  if (!rec || !rec.h) return pin === DEFAULT_PIN;
+  try { return (await hashPin(pin, rec.v)) === rec.h; } catch(e){ return false; }
+}
+async function saveNewPin(pin){
+  const v = (window.crypto && crypto.subtle) ? 's' : 'p';
+  store.set(PIN_KEY, { v, h: await hashPin(pin, v), at: Date.now() });
+}
+
+/* ---------- Admin ---------- */
+function openPin(){ $('#pinInput').value=''; $('#pinErr').classList.add('hidden'); $('#pinModal').classList.remove('hidden'); setTimeout(()=>$('#pinInput').focus(),50); }
+function closePin(){ $('#pinModal').classList.add('hidden'); }
+function openAdmin(){ state.isAdmin = true; state.tab='products'; state.editId=null; state.draftImage=''; $('#admin').classList.remove('hidden'); document.body.style.overflow='hidden'; $('#cartBar').classList.add('hidden'); renderAdmin(); }
+function exitAdmin(){ state.isAdmin = false; $('#admin').classList.add('hidden'); document.body.style.overflow=''; renderProducts(); renderBadge(); }
+const byStatus = s => orders.filter(o => o.status === s);
+function renderAdminTabs(){
+  const tabs = [['products','Products ('+products.length+')'],['pending','Pending ('+byStatus('pending').length+')'],['packed','Packed ('+byStatus('packed').length+')'],['delivered','Delivered ('+byStatus('delivered').length+')'],['cloud','☁ Cloud Sync'],['pin','🔑 Change PIN']];
+  $('#adminTabs').innerHTML = tabs.map(([k,l]) => `<button data-act="tab" data-tab="${k}" class="chip px-4 py-2.5 text-sm font-semibold border-b-4 ${state.tab===k ? 'border-fk-yellow text-white' : 'border-transparent text-white/70 hover:text-white'}">${l}</button>`).join('');
+}
+function renderAdmin(){
+  renderAdminTabs();
+  $('#adminBody').innerHTML = state.tab === 'products' ? adminProducts() : state.tab === 'cloud' ? adminCloud() : state.tab === 'pin' ? adminPin() : adminOrders(state.tab);
+}
+function adminPin(){
+  const fld = (name, label, ac) => `<div><label class="text-xs font-semibold text-gray-600">${label}</label><input name="${name}" type="password" inputmode="numeric" maxlength="4" autocomplete="${ac}" placeholder="••••" class="pinfld w-full border rounded px-3 py-2.5 text-lg tracking-[.5em] mt-1 outline-none focus:border-rb"></div>`;
+  return `<form id="pinChangeForm" class="bg-white rounded-lg shadow-sm p-4 space-y-3 max-w-md" novalidate>
+    <h3 class="font-bold">Change Admin PIN</h3>
+    <p class="text-xs text-gray-500">The PIN protects this Admin Dashboard on this device. Use 4 digits.</p>
+    ${fld('cur','Current PIN','off')}
+    ${fld('nw','New PIN','new-password')}
+    ${fld('cf','Confirm New PIN','new-password')}
+    <p id="pinChangeMsg" class="hidden text-sm font-semibold"></p>
+    <button type="submit" class="bg-rb text-white font-bold px-5 py-2.5 rounded-sm text-sm">Update PIN</button>
+  </form>`;
+}
+function adminCloud(){
+  if (!CLOUD_ON) return `<div class="bg-white rounded-lg shadow-sm p-4 space-y-2"><h3 class="font-bold">Cloud Sync is OFF</h3><p class="text-sm text-gray-600">Products are saved only on this phone right now. To show your products to every customer, paste your Firebase <b>databaseURL</b> (and <b>apiKey</b>) into the <code class="bg-gray-100 px-1 rounded">FIREBASE</code> block near the top of the script in <b>index.html</b>, then upload the file again.</p></div>`;
+  const a = savedAuth();
+  let login;
+  if (!FIREBASE.apiKey) login = `<p class="text-xs text-amber-700 bg-amber-50 rounded p-2">Open mode: no admin sign-in is required, so anyone who knows your database URL could change products. Add the apiKey and secure rules to lock it.</p>`;
+  else if (a && a.email) login = `<div class="flex items-center justify-between gap-2"><p class="text-sm">Signed in as <b>${esc(a.email)}</b></p><button data-act="cloudOut" class="border text-xs font-bold px-3 py-2 rounded-sm">Sign out</button></div>`;
+  else login = `<form id="cloudForm" class="space-y-2" novalidate><input name="email" type="email" autocomplete="username" placeholder="Admin email" class="w-full border rounded px-3 py-2.5 text-sm outline-none focus:border-rb"><input name="password" type="password" autocomplete="current-password" placeholder="Password" class="w-full border rounded px-3 py-2.5 text-sm outline-none focus:border-rb"><button type="submit" class="bg-rb text-white font-bold px-5 py-2.5 rounded-sm text-sm">Sign in</button></form>`;
+  return `<div class="bg-white rounded-lg shadow-sm p-4 space-y-3 pb-6">
+    <h3 class="font-bold">Cloud Sync <span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded ml-1">CONNECTED</span></h3>
+    <p class="text-xs text-gray-500 break-all">${esc(CLOUD_URL)}</p>
+    ${login}
+    <div class="border-t pt-3 space-y-2">
+      <p class="text-sm text-gray-600">First time? Publish the products currently on this phone so customers can see them. After that, every product you add, edit or delete goes live automatically.</p>
+      <div class="flex flex-wrap gap-2">
+        <button data-act="cloudPublish" class="bg-fk-orange text-white font-bold px-4 py-2.5 rounded-sm text-sm">⬆ Publish catalog to cloud</button>
+        <button data-act="cloudReload" class="border border-rb text-rb font-bold px-4 py-2.5 rounded-sm text-sm">⟳ Reload from cloud</button>
+      </div>
+    </div></div>`;
+}
+function catalogListHTML(){
+  return products.length ? products.map(p => `<div class="bg-white rounded-lg shadow-sm p-3 flex gap-3 items-center">
+      <img src="${esc(imgFor(p))}" data-cat="${esc(p.category)}" onerror="__fallbackImg(this)" alt="" class="w-14 h-14 rounded object-cover bg-gray-100 shrink-0">
+      <div class="flex-1 min-w-0"><div class="text-sm font-semibold truncate">${esc(p.name)}</div><div class="text-xs text-gray-500">${esc(p.category)} • <b class="text-gray-800">${money(p.price)}</b></div></div>
+      <div class="flex gap-1.5 shrink-0">
+        <button data-act="editProd" data-id="${esc(p.id)}" class="border border-rb text-rb text-xs font-bold px-3 py-2 rounded-sm">Edit</button>
+        <button data-act="delProd" data-id="${esc(p.id)}" class="border border-red-500 text-red-600 text-xs font-bold px-3 py-2 rounded-sm">Delete</button>
+      </div></div>`).join('') : '<p class="text-center text-gray-500 py-8">No products yet. Add your first one above.</p>';
+}
+function renderCatalogList(){ const el = $('#catalogList'); if (el) el.innerHTML = catalogListHTML(); }
+function adminProducts(){
+  const ed = state.editId ? prod(state.editId) : null;
+  const urlVal = ed && ed.image && !ed.image.startsWith('data:') ? ed.image : '';
+  const prevCat = ed ? ed.category : CATS[0];
+  const prevSrc = state.draftImage || (ed ? imgFor(ed) : svgArt(prevCat));
+  const form = `<form id="prodForm" class="bg-white rounded-lg shadow-sm p-4 space-y-3" novalidate>
+    <h3 class="font-bold">${ed ? 'Edit Product' : 'Add New Product'}</h3>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="sm:col-span-2"><label class="text-xs font-semibold text-gray-600">Product Name</label><input name="name" value="${esc(ed?.name||'')}" class="w-full border rounded px-3 py-2.5 text-sm mt-1 outline-none focus:border-rb" placeholder="e.g. Rear Shock Absorber Bush"></div>
+      <div><label class="text-xs font-semibold text-gray-600">Category</label><select name="category" class="w-full border rounded px-3 py-2.5 text-sm mt-1 bg-white outline-none focus:border-rb">${CATS.map(c=>`<option ${prevCat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label class="text-xs font-semibold text-gray-600">Price (₹)</label><input name="price" type="number" min="1" step="1" inputmode="decimal" value="${ed ? esc(ed.price) : ''}" class="w-full border rounded px-3 py-2.5 text-sm mt-1 outline-none focus:border-rb" placeholder="999"></div>
+      <div class="sm:col-span-2">
+        <label class="text-xs font-semibold text-gray-600">Product Photo</label>
+        <div class="mt-1 flex items-center gap-3">
+          <img id="imgPrev" src="${esc(prevSrc)}" data-cat="${esc(prevCat)}" onerror="__fallbackImg(this)" alt="Preview" class="w-24 h-24 rounded-lg object-cover bg-gray-100 border shrink-0">
+          <div class="flex-1 space-y-2">
+            <input id="photoFile" type="file" accept="image/*" class="hidden">
+            <button type="button" data-act="pickPhoto" class="w-full bg-rb text-white font-bold px-4 py-3 rounded-sm text-sm">📷 Take / Upload Photo</button>
+            <button type="button" data-act="clearPhoto" class="w-full border text-gray-700 font-semibold px-4 py-2 rounded-sm text-xs">Remove photo</button>
+          </div>
+        </div>
+        <p id="photoNote" class="text-xs text-gray-500 mt-1.5">Opens your camera or gallery. The photo is resized automatically.</p>
+        <label class="text-xs font-semibold text-gray-600 mt-3 block">…or paste an image link <span class="font-normal text-gray-400">(optional)</span></label>
+        <input id="imgUrl" name="image" value="${esc(urlVal)}" class="w-full border rounded px-3 py-2.5 text-sm mt-1 outline-none focus:border-rb" placeholder="https://...">
+      </div>
+    </div>
+    <p id="prodErr" class="hidden text-sm text-red-600 font-semibold"></p>
+    <div class="flex gap-2">
+      <button type="submit" class="bg-rb text-white font-bold px-5 py-2.5 rounded-sm text-sm">${ed ? 'Save Changes' : 'Add Product'}</button>
+      ${ed ? '<button type="button" data-act="cancelEdit" class="bg-gray-200 font-semibold px-5 py-2.5 rounded-sm text-sm">Cancel</button>' : ''}
+    </div>
+  </form>`;
+  return form + '<h3 class="font-bold mt-5 mb-2">Catalog</h3><div id="catalogList" class="space-y-2 pb-10">' + catalogListHTML() + '</div>';
+}
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const u = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      try {
+        const sw = img.naturalWidth, sh = img.naturalHeight, m = Math.min(sw, sh), sx = (sw - m) / 2, sy = (sh - m) / 2;
+        let side = 640, q = 0.72, out = '';
+        for (let i = 0; i < 5; i++) {
+          const s = Math.min(side, m), c = document.createElement('canvas');
+          c.width = c.height = s;
+          const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, s, s);
+          g.drawImage(img, sx, sy, m, m, 0, 0, s, s);
+          out = c.toDataURL('image/jpeg', q);
+          if (out.length < 90000) break;
+          side = Math.round(side * 0.85); q = Math.max(0.45, q - 0.07);
+        }
+        URL.revokeObjectURL(u); resolve(out);
+      } catch(e){ URL.revokeObjectURL(u); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); reject(new Error('bad image')); };
+    img.src = u;
+  });
+}
+function refreshPrev(){
+  const prev = $('#imgPrev'); if (!prev) return;
+  const url = ($('#imgUrl').value || '').trim(), cat = $('#prodForm [name=category]').value;
+  prev.dataset.cat = cat;
+  prev.src = state.draftImage || (/^(https?:\/\/|data:image\/)/i.test(url) ? url : svgArt(cat));
+}
+async function onPhoto(file){
+  const note = $('#photoNote'); if (!file || !note) return;
+  if (!/^image\//.test(file.type)) { note.textContent = 'Please choose an image file.'; return; }
+  note.textContent = 'Processing photo…';
+  try {
+    const data = await compressImage(file);
+    state.draftImage = data; $('#imgUrl').value = ''; refreshPrev();
+    note.textContent = 'Photo ready (' + Math.round(data.length * 0.75 / 1024) + ' KB). Tap Save to keep it.';
+  } catch(e){ note.textContent = 'Could not read that photo. Please try another one.'; }
+}
+function adminOrders(status){
+  const list = byStatus(status);
+  if (!list.length) return `<div class="text-center text-gray-500 py-16"><div class="text-5xl mb-2">📦</div><p class="font-semibold">No ${status} orders</p></div>`;
+  const badge = { pending:'bg-amber-100 text-amber-800', packed:'bg-blue-100 text-blue-800', delivered:'bg-green-100 text-green-800' };
+  return '<div class="space-y-3 pb-10">' + list.map(o => {
+    const dt = new Date(o.createdAt).toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' });
+    const acts = [];
+    if (status==='pending') acts.push(`<button data-act="setStatus" data-id="${esc(o.id)}" data-to="packed" class="bg-rb text-white text-xs font-bold px-3 py-2 rounded-sm">Mark Packed →</button>`);
+    if (status==='packed') { acts.push(`<button data-act="setStatus" data-id="${esc(o.id)}" data-to="delivered" class="bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-sm">Mark Delivered ✔</button>`); acts.push(`<button data-act="setStatus" data-id="${esc(o.id)}" data-to="pending" class="border text-xs font-bold px-3 py-2 rounded-sm">← Pending</button>`); }
+    if (status==='delivered') acts.push(`<button data-act="setStatus" data-id="${esc(o.id)}" data-to="packed" class="border text-xs font-bold px-3 py-2 rounded-sm">← Packed</button>`);
+    acts.push(`<button data-act="viewOrder" data-id="${esc(o.id)}" class="border border-rb text-rb text-xs font-bold px-3 py-2 rounded-sm">View Slip</button>`);
+    acts.push(`<button data-act="delOrder" data-id="${esc(o.id)}" class="border border-red-500 text-red-600 text-xs font-bold px-3 py-2 rounded-sm">Delete</button>`);
+    return `<div class="bg-white rounded-lg shadow-sm p-4">
+      <div class="flex items-start justify-between gap-2">
+        <div><div class="font-bold text-sm">${esc(o.id)}</div><div class="text-xs text-gray-500">${esc(dt)}</div></div>
+        <span class="text-[11px] font-bold px-2 py-1 rounded ${badge[o.status]}">${o.status.toUpperCase()}</span>
+      </div>
+      <div class="mt-2 text-sm"><b>${esc(o.customer.name)}</b> • <a class="text-rb font-semibold" href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a></div>
+      <div class="text-xs text-gray-600 mt-0.5 whitespace-pre-line">${esc(o.customer.address)}</div>
+      <ul class="mt-2 text-sm border-t pt-2 space-y-0.5">${o.items.map(i=>`<li class="flex justify-between gap-2"><span>${esc(i.name)} <span class="text-gray-500">× ${i.qty}</span></span><span class="font-semibold">${money(i.price*i.qty)}</span></li>`).join('')}</ul>
+      <div class="flex justify-between font-extrabold border-t mt-2 pt-2"><span>Grand Total</span><span>${money(o.total)}</span></div>
+      <div class="flex flex-wrap gap-2 mt-3">${acts.join('')}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+function saveProduct(form){
+  const fd = new FormData(form), name = (fd.get('name')||'').trim(), price = parseFloat(fd.get('price')), image = state.draftImage || (fd.get('image')||'').trim(), category = fd.get('category');
+  const err = $('#prodErr'); let m = '';
+  if (name.length < 2) m = 'Enter a product name.';
+  else if (!CATS.includes(category)) m = 'Choose a category.';
+  else if (!(price > 0)) m = 'Enter a valid price.';
+  else if (image && !/^(https?:\/\/|data:image\/)/i.test(image)) m = 'Image URL must start with http(s):// or data:image/.';
+  if (m) { err.textContent = m; err.classList.remove('hidden'); return; }
+  let saved = null;
+  if (state.editId) { const p = prod(state.editId); if (p) { Object.assign(p, { name, category, price, image }); if (!p.ts) p.ts = Date.now(); saved = p; } toast('Product updated'); }
+  else { saved = { id:'p' + Date.now(), name, category, price, image, ts:Date.now() }; products.unshift(saved); toast('Product added'); }
+  saveProducts(); state.editId = null; state.draftImage = ''; renderAdmin(); renderProducts();
+  if (saved && CLOUD_ON) pushProduct(saved);
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  switch (act) {
+    case 'cat': state.cat = t.dataset.cat; renderCats(); renderProducts(); break;
+    case 'add': addToCart(id); break;
+    case 'inc': setQty(id, 1); break;
+    case 'dec': setQty(id, -1); break;
+    case 'rm': delete cart[id]; saveCart(); renderCart(); renderBadge(); renderProducts(); break;
+    case 'closeCart': closeCart(); break;
+    case 'closeSlip': closeSlip(); break;
+    case 'printSlip': printSlip(); break;
+    case 'downloadSlip': downloadSlip(); break;
+    case 'closePin': closePin(); break;
+    case 'exitAdmin': exitAdmin(); break;
+    case 'tab': state.tab = t.dataset.tab; state.editId = null; state.draftImage = ''; renderAdmin(); break;
+    case 'editProd': state.editId = id; state.draftImage = (prod(id)?.image || '').startsWith('data:') ? prod(id).image : ''; renderAdmin(); $('#admin').scrollTo({ top:0, behavior:'smooth' }); break;
+    case 'cancelEdit': state.editId = null; state.draftImage = ''; renderAdmin(); break;
+    case 'pickPhoto': $('#photoFile').click(); break;
+    case 'clearPhoto': state.draftImage = ''; $('#imgUrl').value = ''; refreshPrev(); $('#photoNote').textContent = 'Photo removed. A category picture will be used.'; break;
+    case 'cloudOut': store.set(AUTH_KEY, null); idToken = ''; idExp = 0; renderAdmin(); toast('Signed out'); break;
+    case 'cloudPublish': publishAll(); break;
+    case 'cloudReload': cloudLoad(true).then(() => toast('Reloaded from cloud')); break;
+    case 'delProd': { const p = prod(id); if (p && confirm('Delete "' + p.name + '"?')) { products = products.filter(x => x.id !== id); delete cart[id]; if (CLOUD_ON) removeProduct(id); saveProducts(); saveCart(); if (state.editId === id) state.editId = null; renderAdmin(); renderProducts(); renderBadge(); toast('Product deleted'); } break; }
+    case 'setStatus': { const o = orders.find(x => x.id === id); if (o) { o.status = t.dataset.to; saveOrders(); renderAdmin(); toast('Order moved to ' + o.status); } break; }
+    case 'viewOrder': { const o = orders.find(x => x.id === id); if (o) showSlip(o, 'Order ' + o.id); break; }
+    case 'delOrder': if (confirm('Delete order ' + id + ' permanently?')) { orders = orders.filter(x => x.id !== id); saveOrders(); renderAdmin(); toast('Order deleted'); } break;
+  }
+});
+document.addEventListener('submit', async e => {
+  if (e.target.id === 'prodForm') { e.preventDefault(); saveProduct(e.target); }
+  else if (e.target.id === 'pinChangeForm') {
+    e.preventDefault();
+    const fd = new FormData(e.target), cur = fd.get('cur') || '', nw = fd.get('nw') || '', cf = fd.get('cf') || '', msg = $('#pinChangeMsg');
+    const show = (t, ok) => { msg.textContent = t; msg.className = 'text-sm font-semibold ' + (ok ? 'text-green-700' : 'text-red-600'); };
+    if (!(await verifyPin(cur))) return show('Current PIN is incorrect.');
+    if (!/^\d{4}$/.test(nw)) return show('New PIN must be exactly 4 digits.');
+    if (nw === cur) return show('New PIN must be different from the current PIN.');
+    if (nw === DEFAULT_PIN) return show('Please choose a PIN other than the factory default.');
+    if (nw !== cf) return show('New PIN and Confirm PIN do not match.');
+    await saveNewPin(nw);
+    e.target.reset(); show('PIN updated. Use the new PIN next time you log in.', true); toast('Admin PIN changed ✔');
+  }
+  else if (e.target.id === 'cloudForm') {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try { await cloudSignIn((fd.get('email')||'').trim(), fd.get('password')||''); toast('Signed in ✔'); renderAdmin(); }
+    catch(err){ toast(err.message || 'Sign-in failed', 'err'); }
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'photoFile') { onPhoto(e.target.files && e.target.files[0]); e.target.value = ''; }
+  else if (e.target.name === 'category' && e.target.closest('#prodForm')) refreshPrev();
+});
+document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('pinfld')) e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); if (e.target.id === 'imgUrl') { state.draftImage = ''; refreshPrev(); } });
+$('#checkout').addEventListener('submit', placeOrder);
+$('#pinForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (await verifyPin($('#pinInput').value)) { closePin(); openAdmin(); }
+  else { $('#pinErr').classList.remove('hidden'); $('#pinInput').value=''; $('#pinInput').focus(); }
+});
+$('#cPhone').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+$('#pinInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); });
+function onSearch(v){ state.q = v; $('#searchMob').value = v; $('#searchDesk').value = v; renderProducts(); }
+$('#searchMob').addEventListener('input', e => onSearch(e.target.value));
+$('#searchDesk').addEventListener('input', e => onSearch(e.target.value));
+$('#cartBtn').addEventListener('click', openCart);
+$('#barBtn').addEventListener('click', openCart);
+$('#adminBtnTop').addEventListener('click', openPin);
+$('#adminBtnFoot').addEventListener('click', openPin);
+$('#logoLink').addEventListener('click', e => { e.preventDefault(); state.cat='All'; onSearch(''); renderCats(); window.scrollTo({ top:0, behavior:'smooth' }); });
+$('#cartModal').addEventListener('click', e => { if (e.target.id === 'cartModal') closeCart(); });
+$('#slipModal').addEventListener('click', e => { if (e.target.id === 'slipModal') closeSlip(); });
+$('#pinModal').addEventListener('click', e => { if (e.target.id === 'pinModal') closePin(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#pinModal').classList.contains('hidden')) closePin(); else if (!$('#slipModal').classList.contains('hidden')) closeSlip(); else if (!$('#cartModal').classList.contains('hidden')) closeCart(); } });
+// Keep multiple tabs in sync
+window.addEventListener('storage', e => {
+  if (e.key === KEYS.p) { products = store.get(KEYS.p, products); renderProducts(); }
+  if (e.key === KEYS.o) { orders = store.get(KEYS.o, orders); if (state.isAdmin) renderAdmin(); }
+  if (e.key === KEYS.c) { cart = store.get(KEYS.c, {}); renderBadge(); renderProducts(); }
+});
+
+/* ---------- Init ---------- */
+$('#yr').textContent = new Date().getFullYear();
+cleanCart(); renderCats(); renderProducts(); renderBadge();
+if (CLOUD_ON) { cloudLoad(); cloudStream(); }
+})();
+</script>
+</body>
+</html>
