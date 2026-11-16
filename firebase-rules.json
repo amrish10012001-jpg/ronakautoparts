@@ -1,0 +1,73 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "catalog": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'"
+    },
+    "gallery": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+      "$id": {
+        "$i": {
+          ".validate": "newData.isString() && newData.val().length < 500000"
+        }
+      }
+    },
+    "settings": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'"
+    },
+    "coupons": {
+      ".read": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'"
+      }
+    },
+    "reviews": {
+      ".read": true,
+      "$pid": {
+        ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['rating','ts']) && newData.child('rating').isNumber() && newData.child('rating').val() >= 1 && newData.child('rating').val() <= 5 && (!newData.hasChild('text') || newData.child('text').val().length <= 300)"
+        }
+      }
+    },
+    "orders": {
+      ".indexOn": [
+        "uid",
+        "customer/phone"
+      ],
+      ".read": "auth != null && (auth.token.email === 'YOUR_ADMIN_EMAIL' || (query.orderByChild === 'uid' && query.equalTo === auth.uid) || (query.orderByChild === 'customer/phone' && query.equalTo.matches(/^[6-9][0-9]{9}$/) && ((auth.token.email === query.equalTo + '@customers.ronakautoparts.app' && (root.child('loginAlias').child(query.equalTo).child('a').val() === null || root.child('loginAlias').child(query.equalTo).child('a').val() === '-')) || (root.child('loginAlias').child(query.equalTo).child('a').val() !== null && root.child('loginAlias').child(query.equalTo).child('a').val() !== '-' && auth.token.email === query.equalTo + '.' + root.child('loginAlias').child(query.equalTo).child('a').val() + '@customers.ronakautoparts.app'))))",
+      "$id": {
+        ".write": "(auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL') || (!data.exists() && newData.exists())"
+      }
+    },
+    "customers": {
+      ".read": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+      ".write": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "loginAlias": {
+      "$phone": {
+        ".read": "auth != null && auth.token.email === 'YOUR_ADMIN_EMAIL'",
+        "a": {
+          ".read": true
+        },
+        "verify": {
+          "$h": {
+            ".read": "root.child('loginAlias').child($phone).child('nh').val() === $h"
+          }
+        },
+        ".write": "auth != null && (auth.token.email === 'YOUR_ADMIN_EMAIL' || (!data.exists() && auth.token.email === $phone + '@customers.ronakautoparts.app') || (data.exists() && data.child('a').val() === '-' && auth.token.email === $phone + '@customers.ronakautoparts.app') || (data.exists() && data.child('a').val() !== '-' && auth.token.email === $phone + '.' + data.child('a').val() + '@customers.ronakautoparts.app') || (data.exists() && newData.child('nh').val() === data.child('nh').val() && newData.child('a').val() !== '-' && auth.token.email === $phone + '.' + newData.child('a').val() + '@customers.ronakautoparts.app'))",
+        ".validate": "newData.hasChildren(['a','nh']) && newData.child('a').isString() && newData.child('nh').isString() && newData.child('nh').val().length === 64"
+      }
+    }
+  }
+}
