@@ -1,19 +1,62 @@
 {
-  "id": "./index.html",
+  "id": "ronak-auto-parts-india",
   "name": "Ronak Auto Parts",
   "short_name": "Ronak Parts",
-  "description": "Genuine suspension and auto parts: strut mounts, strut kits, bush kits, coil pads and more. Order online with UPI or cash on delivery.",
+  "description": "Genuine car suspension parts, strut mounts, strut kits, suspension bush kits, and coil pads across India.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "lang": "en-IN",
-  "dir": "ltr",
   "background_color": "#D32F2F",
   "theme_color": "#D32F2F",
-  "categories": ["shopping", "business"],
+  "dir": "ltr",
+  "lang": "en-IN",
+  "prefer_related_applications": false,
+  "categories": ["shopping", "auto", "business"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "icons": [
-    { "src": "./icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ronak Auto Parts Mobile App"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Ronak Auto Parts Store"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Suspension Parts",
+      "short_name": "Parts",
+      "description": "View all car suspension parts",
+      "url": "./index.html",
+      "icons": [{ "src": "./icon.png", "sizes": "192x192" }]
+    }
   ]
 }
